@@ -1,51 +1,32 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 from scipy.stats import kendalltau
+import pandas as pd
 
-# Função para calcular a correlação de Kendall entre o vetor original e as métricas
-def calculate_kendall_correlations(data_frames):
-    metrics = ['degrees', 'betweenness', 'clustering', 'strength', 'closeness_w', 'eignv_w']
-    kendall_correlations = []
+# Seu DataFrame
+data = {
+    'lutador': ['Lutador A', 'Lutador B', 'Lutador C', 'Lutador D', 'Lutador E'],
+    'altura': [175, 180, 170, 170, 185],
+    'peso': [70, 55, 90, 75, 95],
+}
 
-    for metric in metrics:
-        correlations = []
-        for data in data_frames:
-            kendall, _ = kendalltau(data['DATES'], data[metric])
-            correlations.append(kendall)
-        kendall_correlations.append(correlations)
+# Ordens fornecidas por CV19
+ordem_cv19_corrigida = ['Lutador D', 'Lutador B', 'Lutador A', 'Lutador C', 'Lutador E']
 
-    return kendall_correlations
+# Adiciona a ordem corrigida ao DataFrame
+df = pd.DataFrame(data)
 
-def plot_kendall_correlations(kendall_correlations, delays):
-    metrics = ['Degrees', 'Weighted Betweenness', 'Clustering', 'Weighted Strength', 'Weighted Closeness', 'Weighted Eigenvector']
+# Cria um mapeamento de lutadores para índices sequenciais
+lutadores_indexados = {lutador: idx + 1 for idx, lutador in enumerate(df['lutador'])}
 
-    plt.figure(figsize=(12, 6))  # Tamanho do gráfico
+# Substitui os nomes dos lutadores por seus índices em 'CV19-ORD'
+df['CV19-ORD'] = [lutadores_indexados[lutador] for lutador in ordem_cv19_corrigida]
 
-    for i, metric in enumerate(metrics):
-        plt.plot(delays, kendall_correlations[i], marker='o', label=f'{metric}')
+print(df['CV19-ORD'])
+# Calcule a correlação de Kendall entre 'altura' e 'CV19-ORD'
+kendall_corr_altura, _ = kendalltau(df['altura'], df['CV19-ORD'])
 
-    plt.title('Kendall Correlations for Metrics')
-    plt.xlabel('Delays (Cases)')
-    plt.ylabel('Kendall Correlation')
-    plt.legend()
-    plt.grid()
-    plt.show()
+# Calcule a correlação de Kendall entre 'peso' e 'CV19-ORD'
+kendall_corr_peso, _ = kendalltau(df['peso'], df['CV19-ORD'])
 
-# Loading data from each file into separate DataFrames
-data_1_df = pd.read_excel("Datas/results/results_tables/result_table-0cases.xlsx")
-data_2_df = pd.read_excel("Datas/results/results_tables/result_table-20cases.xlsx")
-data_3_df = pd.read_excel("Datas/results/results_tables/result_table-40cases.xlsx")
-data_4_df = pd.read_excel("Datas/results/results_tables/result_table-60cases.xlsx")
-data_5_df = pd.read_excel("Datas/results/results_tables/result_table-80cases.xlsx")
-data_6_df = pd.read_excel("Datas/results/results_tables/result_table-100cases.xlsx")
 
-data_frames = [data_1_df, data_2_df, data_3_df, data_4_df, data_5_df, data_6_df]
-
-# Calculate Kendall correlations
-kendall_correlations = calculate_kendall_correlations(data_frames)
-
-# Values for delays (cases)
-delays = [0, 20, 40, 60, 80, 100]
-
-# Plot Kendall correlations for each metric
-plot_kendall_correlations(kendall_correlations, delays)
+print(f"Correlação de Kendall entre 'altura' e 'CV19-ORD': {kendall_corr_altura}")
+print(f"Correlação de Kendall entre 'peso' e 'CV19-ORD': {kendall_corr_peso}")

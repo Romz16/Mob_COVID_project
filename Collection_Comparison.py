@@ -82,7 +82,7 @@ def compare_random(metrics_matrix):
     result = []
     for i in range(1, matrix_size + 1):
         col1_elements = set(Id_matrix_covid[:i])
-        col2_elements = set(metrics_matrix[:i, 0].astype(float))
+        col2_elements = set(metrics_matrix[:i, 1].astype(float))
         intersection = col1_elements.intersection(col2_elements)
         similarity_percentage = (len(intersection) / len(col1_elements))
 
@@ -91,10 +91,7 @@ def compare_random(metrics_matrix):
 
 def graph_plot_DateXMetrics(step,cases,leng):
     mean_table = combined_table.groupby('id').mean()
-    
-    print(mean_table)
-    mean_table = combined_table.groupby('date').mean()
-    std_table = combined_table.groupby('date ').std()
+    std_table = combined_table.groupby('id').std()
     upper_bound = mean_table + 2 * std_table
     lower_bound = mean_table - 2 * std_table
     # Indices for points along the x-axis intervals
@@ -115,8 +112,7 @@ def graph_plot_DateXMetrics(step,cases,leng):
     'Strength': strength_interp,
     'Weighted Closeness': closeness_w_interp,
     'Weighted Eigenvector': eignv_w_interp })
-    # Calculate the area under each curve using numerical integration (trapezoidal rule)
-
+    
     # Configure the plot
     plt.figure(figsize=(10, 6))
     plt.plot(point_indices, degrees_interp, 'ro-', label='Degree')
@@ -141,32 +137,30 @@ def graph_plot_DateXMetrics(step,cases,leng):
     plt.tight_layout()
     plt.savefig(f'Datas/results/graph_{cases}cases.png')
     # Display the plot
-    
+    plt.show()
     plt.close()
     
 def graph_plot_minimum_casesXMedia():
     # Plotting the graph
     plt.figure(figsize=(8, 6))
-    labels = ['Degrees', 'Weighted Betweenness', 'Clustering', ' Weighted Strength', ' Weighted Closeness ', ' Weighted Eigenvector ']
+    labels = ['Degrees', 'Betweenness', 'Clustering', 'Strength', ' Weighted Closeness ', ' Weighted Eigenvector ']
     data = [degrees_avg, betweenness_avg, clustering_avg, strength_avg, closeness_w_avg, eignv_w_avg]
-    desings = ['o-','x','>','^','']
+
     for label, values in zip(labels, data):
         plt.plot(min_cases, values, 'o-', label=f'Avg: {round(sum(values) / len(values), 2)} - {label}')
         for x, y in zip(min_cases, values):
             plt.text(x, y, str(round(y, 2)), ha='center', va='bottom')
 
-    plt.xlabel('Minimum number of cases')
+    plt.xlabel('minimum_cases')
     plt.ylabel('Average Similarity')
-    plt.ylim(0.3, 0.7)
-    # Automatically adjust the plot to remove empty space after data
-    plt.autoscale(axis='x', tight=True)
+    plt.title('AVERAGE NETWORK CENTRALITY')
+    plt.ylim(0, 1)
     plt.legend(title='Average Similarity', loc='best')
     plt.tight_layout()
      # Save the plot as an image file
-    plt.savefig('Datas/results/graph_minimum-Media.pdf')
-    plt.show()
+    plt.savefig('Datas/results/graph_minimum-Media.png')
     # Close the plot to release resources
-    plt.close() 
+    plt.close()
     
 def compare_columns(metrics_matrix, col_idx):
     # Select the columns from the matrices
@@ -186,11 +180,19 @@ def compare_columns(metrics_matrix, col_idx):
 
 def calculate_random_metric_averages(data_matrix):
     Mselected_data = data_matrix.copy()
-    np.random.shuffle(Mselected_data)
+    # Extraia a segunda coluna (coluna 'geocode')
+    geocodes = Mselected_data[:, 1]
+
+    # Embaralhe a lista de geocodes
+    np.random.shuffle(geocodes)
+
+    # Atualize a segunda coluna com os geocodes embaralhados
+    Mselected_data[:, 1] = geocodes
     similarity = compare_random(Mselected_data)
+    
+    print(similarity)
     result_data = {
-        "Similarity": similarity,
-        "date":matrix_covid_dates}
+        "Similarity": similarity}
     result_date_df = pd.DataFrame(result_data)
     result_date_df['id'] = range(1, len(result_date_df) + 1)
     excel_name = "random_metric_averages.xlsx"
@@ -199,7 +201,7 @@ def calculate_random_metric_averages(data_matrix):
     
 # Open the GraphML file and create a Graph object from it
 graph = Graph.Read_GraphML("Datas/networks/grafo_Peso_Geral.GraphML")
-min_cases = [0,20,40,60,80,100]
+min_cases = [40]
 boolQ= True
 # Initialize lists to store average similarity values for each column
 degrees_avg = []
@@ -218,7 +220,7 @@ if len(min_cases)>1:
         covid_matrix = np.array(covidID_list)
     # Receive the size of the metrics matrix to match the size of the matrices
         matrix_size = len(metrics_matrix)
-        #matrix_size = 100 
+        #matrix_size = 400 
         matrix_covid_dates = covid_matrix[:matrix_size, 0]
         Id_matrix_covid = covid_matrix[:matrix_size, 1].astype(float)
         # result_list = [calculate_random_metric_averages(metrics_matrix) for _ in range(10)]
@@ -238,8 +240,7 @@ if len(min_cases)>1:
         strength_avg.append(np.mean(strength_similarity))
         closeness_w_avg.append(np.mean(closeness_w_similarity))
         eignv_w_avg.append(np.mean(eignv_w_similarity))
-    graph_plot_minimum_casesXMedia()
-
+        graph_plot_minimum_casesXMedia()
 else:
     # Receive lists with filtered IDs
     covidID_list = filter_cases("Datas/Pre-processed/cases-brazil-cities-time_2020.csv", min_cases[0])
@@ -249,19 +250,20 @@ else:
     covid_matrix = np.array(covidID_list)
     # Receive the size of the metrics matrix to match the size of the matrices
     matrix_size = len(metrics_matrix)
-    #matrix_size = 100 
+    #matrix_size = 200 
     matrix_covid_dates = covid_matrix[:matrix_size, 0]
     Id_matrix_covid = covid_matrix[:matrix_size, 1].astype(float)
-    result_list = [calculate_random_metric_averages(metrics_matrix) for _ in range(10)]
+    result_list = [calculate_random_metric_averages(covid_matrix) for _ in range(10)] 
     combined_table = pd.concat(result_list)
     # Calculate the similarity percentage for each metric
     degrees_similarity = compare_columns(metrics_matrix, 1)
+
     betweenness_similarity = compare_columns(metrics_matrix, 2)
     clustering_similarity = compare_columns(metrics_matrix, 3)
     strength_similarity = compare_columns(metrics_matrix, 4)
     closeness_w_similarity = compare_columns(metrics_matrix, 5)
     eignv_w_similarity = compare_columns(metrics_matrix, 6)
-#graph_plot_DateXMetrics(255,min_cases[0],matrix_size)
+graph_plot_DateXMetrics(255,min_cases[0],matrix_size)
 
 
 # #Gaph_plot_DateXMetrics(1,min_cases[0],matrix_size)

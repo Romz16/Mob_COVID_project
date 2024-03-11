@@ -1,60 +1,59 @@
+from igraph import Graph
+import numpy as np
 import pandas as pd
+from scipy.stats import kendalltau, spearmanr
 import matplotlib.pyplot as plt
-from matplotlib import rc
+#metrics = ['degrees', 'betweenness', 'clustering', 'strength', 'closeness_w', 'eignv_w']
+graph = Graph.Read_GraphML("Datas/networks/grafo_Peso_Geral.GraphML")
+geocodes = list(map(int, graph.vs["geocode"]))
+degrees = graph.degree()
+clustering = graph.transitivity_local_undirected()
+weighted_strength = graph.strength(weights="weight")
+graph.es['w_inv'] = 1.0 / np.array(graph.es['weight'])
+weighted_betweenness = graph.betweenness(vertices=None, directed=False, cutoff=None, weights='w_inv')
+weighted_closeness = graph.closeness(vertices=None, mode='all', cutoff=None, weights='w_inv', normalized=True)
+weighted_eignv = graph.evcent(directed=False, scale=True, weights='w_inv', return_eigenvalue=False)
 
-def graph_plot_minimum_casesXCorrelation(data_0, data_20,data_40,data_60,data_80, data_100):
+metrics_df = pd.DataFrame({
+    "geocode": geocodes,
+    "degree": degrees,
+    "clustering": clustering,
+    "Weighted_strength": weighted_strength,
+    "Weighted_betweenness": weighted_betweenness,
+    "Weighted_closeness": weighted_closeness,
+    "Weighted_eignv": weighted_eignv,
+    "Ordered_covidcases":
+})
 
-    minimum = [0,20,40,60,80,100]
-    # Kendall correlations for each minimum value
-    Kendalls = []  
-    for data in [data_0, data_20,data_40,data_60,data_80, data_100]:
-        metrics_df = data.drop(columns=['DATES'])
-        # Calculate Kendall and Kendall correlations
-        correlations_Kendall = metrics_df.corrwith(data['DATES'], method='kendall')
-        Kendalls.append(correlations_Kendall)
 
-    metrics = ['degrees', 'betweenness', 'clustering', 'strength', 'closeness_w', 'eignv_w']
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-    legend_labels = []
 
-    for i, metric in enumerate(metrics):
-        color = colors[i % len(colors)]  # Select a color from the color list
-        metric_values = [correlations[metric] for correlations in Kendalls]
-        plt.plot(minimum, metric_values, marker='o', linestyle='-', label=metric, color=color)
-        legend_labels.append(metric)  # Add the metric to the legend label list
 
-        # Add labels to the data points
-        for j, value in enumerate(metric_values):
-            plt.text(minimum[j], value, f'{value:.4f}', ha='left', va='bottom', fontsize=10)
+# Suponhamos que você tenha um DataFrame com os dados
+# Exemplo fictício para ilustração, substitua pelos seus dados reais
+data = {
+    'Geocode': [1, 2, 3, 4, 5],
+    'Metrica_1': [10, 15, 8, 20, 12],
+    'Metrica_2': [30, 25, 40, 15, 35],
+    'Casos_COVID': [3, 5, 1, 4, 2],  # Ordenei de acordo com a ordem de surgimento
+}
+df = pd.DataFrame(data)
 
-    # Add labels to the axes
-    plt.xlabel('Minimum Values')
-    plt.ylabel('Kendall Correlation')
-    plt.tight_layout()  
-    plt.autoscale(axis='x', tight=True)
-    plt.autoscale(axis='y', tight=True)  # Also adjust the Y-axis automatically
-    # Define a mapping of old names to new names
-    name_mapping = {
-        'degrees': 'Degrees',
-        'betweenness': 'Weighted Betweenness',
-        'clustering': 'Clustering',
-        'strength': 'Weighted Strength',
-        'closeness_w': 'Weighted Closeness',
-        'eignv_w': 'Weighted Eigenvector'
-    }
-    # Replace the legend labels with the new names
-    legend_labels = [name_mapping.get(label, label) for label in legend_labels]
-    # Add a legend for the metrics with the labels
-    plt.legend(legend_labels)
-    #plt.savefig("Datas/results/Kendall.png")
-    plt.show()
+# Calcula os coeficientes de Kendall e Spearman para cada métrica
+kendall_corr_metrica_1, _ = kendalltau(df['Metrica_1'], df['Casos_COVID'])
+spearman_corr_metrica_1, _ = spearmanr(df['Metrica_1'], df['Casos_COVID'])
 
-# Loading data from each file into separate DataFrames
-data_1_df = pd.read_excel("Datas/results/results_tables/result_table-0cases.xlsx")
-data_2_df = pd.read_excel("Datas/results/results_tables/result_table-20cases.xlsx")
-data_3_df = pd.read_excel("Datas/results/results_tables/result_table-40cases.xlsx")
-data_4_df = pd.read_excel("Datas/results/results_tables/result_table-60cases.xlsx")
-data_5_df = pd.read_excel("Datas/results/results_tables/result_table-80cases.xlsx")
-data_6_df = pd.read_excel("Datas/results/results_tables/result_table-100cases.xlsx")
+kendall_corr_metrica_2, _ = kendalltau(df['Metrica_2'], df['Casos_COVID'])
+spearman_corr_metrica_2, _ = spearmanr(df['Metrica_2'], df['Casos_COVID'])
 
-graph_plot_minimum_casesXCorrelation(data_1_df, data_2_df,data_3_df,data_4_df,data_5_df, data_6_df)
+# Cria um DataFrame para os resultados
+resultados = pd.DataFrame({
+    'Métrica': ['Métrica 1', 'Métrica 2'],
+    'Kendall': [kendall_corr_metrica_1, kendall_corr_metrica_2],
+    'Spearman': [spearman_corr_metrica_1, spearman_corr_metrica_2],
+})
+
+# Plota um gráfico de barras
+resultados.plot(x='Métrica', y=['Kendall', 'Spearman'], kind='bar', rot=0)
+plt.ylabel('Coeficiente de Correlação')
+plt.title('Comparação de Coeficientes de Correlação para Métrica 1 e Métrica 2')
+plt.show()

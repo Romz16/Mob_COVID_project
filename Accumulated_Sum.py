@@ -124,12 +124,7 @@ def plotGraphWithLogisticCurve(leng, minimum_cases):
     popt_eignv, _ = curve_fit(logistic_growth, point_indices, eignv_interp)
     
     # Imprimindo os parâmetros ajustados para cada métrica
-    print("Degree Fit Parameters:", popt_degree)
-    print("Clustering Fit Parameters:", popt_clustering)
-    print("Strength Fit Parameters:", popt_strength)
-    print("Betweenness Fit Parameters:", popt_betweenness)
-    print("Closeness Fit Parameters:", popt_closeness)
-    print("Eigenvector Fit Parameters:", popt_eignv)
+
 
     # Curvas ajustadas usando os parâmetros estimados
     degree_fit = logistic_growth(point_indices, *popt_degree)
@@ -141,23 +136,23 @@ def plotGraphWithLogisticCurve(leng, minimum_cases):
     
     
     
-# Latex font --------------------
-    rc('text', usetex=True)
-    font = {'family' : 'normal',
-            'weight' : 'bold',
-            'size'   : 12}
+# # Latex font --------------------
+#     rc('text', usetex=True)
+#     font = {'family' : 'normal',
+#             'weight' : 'bold',
+#             'size'   : 12}
 
-    rc('font', **font)
-    params = {'legend.fontsize': 14}
-    plt.rcParams.update(params)
-    # -------------------------------
+#     rc('font', **font)
+#     params = {'legend.fontsize': 14}
+#     plt.rcParams.update(params)
+#     # -------------------------------
     # Plotar curvas ajustadas
-    plt.plot(point_indices, degree_fit, 'r--', label=f'Logistic Fit (Degree) - A: {popt_degree[0]:.2f}, B: {popt_degree[1]:.2f}, K: {popt_degree[2]:.2f}')
-    plt.plot(point_indices, clustering_fit, 'g--', label=f'Logistic Fit (Clustering) - A: {popt_clustering[0]:.2f}, B: {popt_clustering[1]:.2f}, K: {popt_clustering[2]:.2f}')
-    plt.plot(point_indices, strength_fit, 'y--', label=f'Logistic Fit (Weighted Strength) - A: {popt_strength[0]:.2f}, B: {popt_strength[1]:.2f}, K: {popt_strength[2]:.2f}')
-    plt.plot(point_indices, betweenness_fit, 'b--', label=f'Logistic Fit (Weighted Betweenness) - A: {popt_betweenness[0]:.2f}, B: {popt_betweenness[1]:.2f}, K: {popt_betweenness[2]:.2f}')
-    plt.plot(point_indices, closeness_fit, 'm--', label=f'Logistic Fit (Weighted Closeness) - A: {popt_closeness[0]:.2f}, B: {popt_closeness[1]:.2f}, K: {popt_betweenness[2]:.2f}')
-    plt.plot(point_indices, eignv_fit, 'c--', label=f'Logistic Fit (Eigenvector Closeness) - A: {popt_eignv[0]:.2f}, B: {popt_eignv[1]:.2f}, K: {popt_eignv[2]:.2f}')
+    plt.plot(point_indices, degree_fit, 'rs--', label=f'Logistic Fit (Degree) - A: {popt_degree[0]:.2f}, B: {popt_degree[1]:.2f}, K: {popt_degree[2]:.2f}')
+    plt.plot(point_indices, clustering_fit, 'go--', label=f'Logistic Fit (Clustering) - A: {popt_clustering[0]:.2f}, B: {popt_clustering[1]:.2f}, K: {popt_clustering[2]:.2f}')
+    plt.plot(point_indices, strength_fit, 'yd--', label=f'Logistic Fit (Weighted Strength) - A: {popt_strength[0]:.2f}, B: {popt_strength[1]:.2f}, K: {popt_strength[2]:.2f}')
+    plt.plot(point_indices, betweenness_fit, 'b^--', label=f'Logistic Fit (Weighted Betweenness) - A: {popt_betweenness[0]:.2f}, B: {popt_betweenness[1]:.2f}, K: {popt_betweenness[2]:.2f}')
+    plt.plot(point_indices, closeness_fit, 'm*--', label=f'Logistic Fit (Weighted Closeness) - A: {popt_closeness[0]:.2f}, B: {popt_closeness[1]:.2f}, K: {popt_betweenness[2]:.2f}')
+    plt.plot(point_indices, eignv_fit, 'c.--', label=f'Logistic Fit (Eigenvector Closeness) - A: {popt_eignv[0]:.2f}, B: {popt_eignv[1]:.2f}, K: {popt_eignv[2]:.2f}')
     plt.fill_between(mean_table.index, lower_bound['Degree'], upper_bound['Degree'], color='gray', alpha=0.3)
     plt.fill_between(mean_table.index, lower_bound['Clustering'], upper_bound['Clustering'], color='gray', alpha=0.3)
     plt.fill_between(mean_table.index, lower_bound['Weighted Strength'], upper_bound['Weighted Strength'], color='gray', alpha=0.3)
@@ -173,7 +168,7 @@ def plotGraphWithLogisticCurve(leng, minimum_cases):
     plt.tight_layout()
     plt.xlim(0, len(metrics_table) - 1)  
     plt.ylim(0, 1) 
-    plt.savefig(f'Datas/results/LogisticFit_{minimum_cases}cases.png', bbox_inches='tight')
+    plt.savefig(f'Datas/results/LogisticFit_{minimum_cases}cases.pdf', bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -212,12 +207,12 @@ def plotGraph(leng,minimum_cases):
     betweenness_fit = logistic_growth(point_indices, *popt_betweenness)
 
     plt.figure(figsize=(10, 6))
-    plt.plot(point_indices, degree_interp, 'ro-', label=f'Degree: {areas["Degree"]:.2f}')
-    plt.plot(point_indices, clustering_interp, 'go-', label=f'Clustering: {areas["Clustering"]:.2f}')
-    plt.plot(point_indices, strength_interp, 'yo-', label=f'Weighted Strength: {areas["Weighted Strength"]:.2f}')
-    plt.plot(point_indices, betweenness_interp, 'bo-', label=f'Weighted Betweenness: {areas["Weighted Betweenness"]:.2f}')
-    plt.plot(point_indices, closeness_interp, 'mo-', label=f'Weighted Closeness: {areas["Weighted Closeness"]:.2f}')
-    plt.plot(point_indices, eignv_interp, 'co-', label=f'Weighted Eignv: {areas["Weighted Eigenvector"]:.2f}')
+    plt.plot(point_indices, degree_interp, 'ro-', label=f'Degree: {areas["Degree"]:.2f}', marker='s')
+    plt.plot(point_indices, clustering_interp, 'gs-', label=f'Clustering: {areas["Clustering"]:.2f}', marker='^')
+    plt.plot(point_indices, strength_interp, 'yd-', label=f'Weighted Strength: {areas["Weighted Strength"]:.2f}', marker='v')
+    plt.plot(point_indices, betweenness_interp, 'b^-', label=f'Weighted Betweenness: {areas["Weighted Betweenness"]:.2f}', marker='x')
+    plt.plot(point_indices, closeness_interp, 'mo-', label=f'Weighted Closeness: {areas["Weighted Closeness"]:.2f}', marker='+')
+    plt.plot(point_indices, eignv_interp, 'c*-', label=f'Weighted Eignv: {areas["Weighted Eigenvector"]:.2f}',marker='o')
     plt.fill_between(mean_table.index, lower_bound['Degree'], upper_bound['Degree'], color='gray', alpha=0.3)
     plt.fill_between(mean_table.index, lower_bound['Clustering'], upper_bound['Clustering'], color='gray', alpha=0.3)
     plt.fill_between(mean_table.index, lower_bound['Weighted Strength'], upper_bound['Weighted Strength'], color='gray', alpha=0.3)
@@ -248,30 +243,50 @@ def plotGraph(leng,minimum_cases):
     plt.tight_layout()
     plt.xlim(0, len(metrics_table) - 1)  
     plt.ylim(0, 1) 
-    plt.savefig(f'Datas/results/Accumulated_metricas_{minimum_cases}cases.png', bbox_inches='tight')
+    plt.savefig(f'Datas/results/Accumulated_metricas_{minimum_cases}cases.pdf', bbox_inches='tight')
     plt.show()
     plt.close()
 
 
 def graph_plot_minimum_casesXintegral():      
-    plt.figure(figsize=(10, 8))
-    labels = ['Degrees', 'Weighted Betweenness', 'Clustering', 'Weighted Strength', 'Weighted Closeness ', 'Weighted Eigenvector ']
-    data = [degrees_avg, betweenness_avg, clustering_avg, strength_avg, closeness_avg, eignv_avg]
-    for label, values in zip(labels, data):
-        plt.plot(min_cases, values, 'o-', label=f'Avg: {round(sum(values) / len(values), 2)} - {label}')
-        for x, y in zip(min_cases, values):
-            plt.text(x, y, str(round(y, 2)), ha='center', va='bottom')
-    plt.xlabel('Minimum number of cases')
-    plt.ylabel('Area under curve')
-    plt.autoscale(axis='x', tight=True)
-    plt.autoscale(axis='y', tight=True)
-    plt.legend(title='Accumulated', loc='best')
-    plt.tight_layout()
-     # Save the plot as an image file
-    plt.savefig('Datas/results/graph_MinimumIntegral_SUM.png')
-    plt.show()
-    # Close the plot to release resources
-    plt.close()
+    #plt.figure(figsize=(10, 8))
+    labels = ['Degrees', 'Weighted Betweenness', 'Clustering', 'Weighted Strength', 'Weighted Closeness ', 'Weighted Eigenvector ','Mean cases']
+    #markers = ['o', 's', '^', '+', 'v', 'x','~']  
+    data = [degrees_avg, betweenness_avg, clustering_avg, strength_avg, closeness_avg, eignv_avg,mean_random_avg]
+
+    # for label, marker, values in zip(labels, markers, data):
+    #     plt.plot(min_cases, values, marker + '-', label=f'Avg: {round(sum(values) / len(values), 2)} - {label}')
+    #     for x, y in zip(min_cases, values):
+    #         plt.text(x, y, str(round(y, 2)), ha='center', va='bottom')
+
+    # plt.xlabel('Minimum number of cases')
+    # plt.ylabel('Area under curve')
+    # plt.autoscale(axis='x', tight=True)
+    # plt.autoscale(axis='y', tight=True)
+    
+    # # Ajuste da legenda para a posição inferior quase no meio
+    # plt.legend(title='Accumulated', loc='lower center', ncol=2)
+    
+    # plt.tight_layout()
+    
+    # # Salvar o gráfico como um arquivo de imagem
+    # plt.savefig('Datas/results/graph_MinimumIntegral_SUM.pdf')
+    
+    # # Exibir o gráfico
+    # plt.show()
+     # Gerar a tabela CSV
+    with open('Datas/results/table_MinimumIntegral_SUM.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        
+        # Escrever o cabeçalho da tabela
+        writer.writerow(['Minimum number of cases'] + labels)
+        
+        # Escrever os dados
+        for min_case, values in zip(min_cases, zip(*data)):
+            writer.writerow([min_case] + list(values))
+    print("FEito")
+    
+import csv 
 
 graph = Graph.Read_GraphML("Datas/networks/grafo_Peso_Geral.GraphML")
 geocodes = list(map(int, graph.vs["geocode"]))
@@ -298,7 +313,9 @@ clustering_avg = []
 strength_avg = []
 closeness_avg = []
 eignv_avg = []
-min_cases = [0]
+mean_random_avg = []
+std_random_avg = []
+min_cases = list(range(1, 61))
 leng = []
 if len(min_cases)>1:
     for minimum_cases in min_cases :   
@@ -320,6 +337,10 @@ if len(min_cases)>1:
         df_sum['Betweenness Accumulated'] = df_sum['Weighted_betweenness'].cumsum() / soma_betweenness
         df_sum['Closeness Accumulated'] = df_sum['Weighted_closeness'].cumsum() / soma_closeness
         df_sum['Eignv Accumulated'] = df_sum['Weighted_eignv'].cumsum() / soma_eignv
+        result_list = [calculate_random_metric_averages(df) for _ in range(700)]
+        combined_table = pd.concat(result_list)
+        mean_table = combined_table.groupby('Date').mean()
+        std_table = combined_table.groupby('Date').std()
         
         # Calculate the accumulated area under each curve
         degrees_area = np.trapz(df_sum['Degree Accumulated'], dx=1)
@@ -328,6 +349,8 @@ if len(min_cases)>1:
         strength_area = np.trapz(df_sum['Strength Accumulated'], dx=1)
         closeness_w_area = np.trapz(df_sum['Closeness Accumulated'], dx=1)
         eignv_w_area = np.trapz(df_sum['Eignv Accumulated'], dx=1)
+        mean_table_area = np.trapz(mean_table,dx=1)
+        std_table_area = np.trapz(std_table,dx=1)
         # Append the calculated areas to the respective lists
         degrees_avg.append(degrees_area)
         betweenness_avg.append(betweenness_area)
@@ -335,6 +358,8 @@ if len(min_cases)>1:
         strength_avg.append(strength_area)
         closeness_avg.append(closeness_w_area)
         eignv_avg.append(eignv_w_area)
+        mean_random_avg.append(mean_table_area)
+        std_random_avg.append(std_table_area)
     graph_plot_minimum_casesXintegral()
 else:
     df = filter_cases("Datas/Pre-processed/cases-brazil-cities-time_2020.csv", min_cases[0])
@@ -356,8 +381,9 @@ else:
 
     metrics_table = metrics_table.reset_index(drop=True)
     dates = df_sum['date']
-    result_list = [calculate_random_metric_averages(df) for _ in range(10)]
+    result_list = [calculate_random_metric_averages(df) for _ in range(500)]
     combined_table = pd.concat(result_list)
     mean_table = combined_table.groupby('Date').mean()
     std_table = combined_table.groupby('Date').std()
+    
     plotGraph(leng[0],min_cases[0])
