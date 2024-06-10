@@ -871,7 +871,7 @@ def construindo_rede_mobilidade(df_ibge, codigos_municipios):
     return edges, weights, nome_municipios, codigo_para_indice, indice_para_codigo
 
 
-def gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=2):
+def gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=700):
     # Extrair e armazenar o vetor de graus da rede original
     grafo_original = nx.Graph()
     grafo_original.add_edges_from(edges)
