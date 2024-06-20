@@ -164,7 +164,7 @@ def plotGraph(leng, minimum_cases):
     plt.tight_layout()
     plt.xlim(0, len(metrics_table) - 1)
     plt.ylim(0, 1)
-    plt.savefig(f'IC/Accumulated_metricas_{minimum_cases}cases.pdf', bbox_inches='tight')
+    plt.savefig(f'/media/work/romulorocha/IC/Accumulated_metricas_{minimum_cases}cases_RANDNET.pdf', bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -232,7 +232,7 @@ def Acummulate (graph_name,list_cases_name,min_cases):
       filtered_df = filtered_df.drop_duplicates(subset='ibgeID')
       return filtered_df
 
-  df = filter_cases("Datas/Pre-processed/cases-brazil-cities-time_2020.csv", min_cases[0])
+  df = filter_cases("/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv", min_cases[0])
   df_covid = df
   leng = []
   df = df.merge(metrics_df, left_on='ibgeID', right_on='geocode')
@@ -388,7 +388,7 @@ def plot_acc_normalized(normalized_df,leng,df_date_cum_cases):
   plt.ylim(0,1)
   plt.legend()
   plt.tight_layout()
-  plt.savefig(f'Accumulated_metricas_V2cases.pdf', bbox_inches='tight')
+  plt.savefig(f'/media/work/romulorocha/IC/Accumulated_metricas_RANDNET_cases.pdf', bbox_inches='tight')
   plt.show()
 
 # graph_name = "IC/Datas/networks/rede_aleatorizada.GraphML"
@@ -470,7 +470,7 @@ def SetComparison(graph_name,list_cases_name,min_cases):
 
 
   # Receive lists with filtered IDs
-  covidID_list = filter_cases("Datas/Pre-processed/cases-brazil-cities-time_2020.csv", min_cases[0]) #min_cases[0]
+  covidID_list = filter_cases("/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv", min_cases[0]) #min_cases[0]
   metrics_list = filter_records(get_matrix(graph), covidID_list)
   covidID_list = filter_records2(metrics_list,covidID_list)
   metrics_matrix = np.array(metrics_list, dtype=float)
@@ -700,7 +700,7 @@ def graph_plot_DateXMetrics(step,cases,leng,df,matrix_covid_dates):
     # Display the legend
     plt.legend()
 
-    plt.savefig(f'Collection_metricsXdate_{cases}cases.pdf')
+    plt.savefig(f'/media/work/romulorocha/IC/Collection_metricsXdate_{cases}cases_RANDNET.pdf')
     # Display the plot
     plt.show()
     plt.close()
@@ -743,7 +743,7 @@ def graph_plot_minimum_casesXMedia():
     plt.figure(figsize=(10, 6))
     labels = ['Degrees', 'Weighted Betweenness', 'Clustering', 'Weighted Strength', ' Weighted Closeness ', ' Weighted Eigenvector', 'R-Mean', 'R-std']
     data = [degrees_integral, betweenness_integral, clustering_integral, strength_integral, closeness_w_integral, eignv_w_integral,Random_mean_integral,Random_std_integral]
-    with open('Datas/results/table_Integral_Collection_Comparison.csv', 'w', newline='') as csvfile:
+    with open('/media/work/romulorocha/IC/Datas/results/table_Integral_Collection_Comparison.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['Minimum number of cases'] + labels)
 
@@ -917,11 +917,11 @@ def gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=70
             rede_aleatorizada.edges[u, v]['weight'] = pesos_aleatorios[j]
 
         # Salvar a rede aleatorizada em um arquivo GraphML
-        graph_name = f'Datas/networks/rede_aleatorizada_{iteracao+1}.graphml'
+        graph_name = f'/media/work/romulorocha/IC/Datas/networks/rede_aleatorizada_{iteracao+1}.graphml'
         nx.write_graphml(rede_aleatorizada, graph_name)
 
         # Aqui você pode adicionar o código para rodar os Algoritmos 1 e 2 e coletar os resultados
-        list_cases_name = "Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
+        list_cases_name = "/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
         min_cases = [5]
         df_acc, Cumulative_Cases_Day = Acummulate(graph_name, list_cases_name, min_cases)
         df, matrix_covid_dates = SetComparison(graph_name, list_cases_name, min_cases)
@@ -938,7 +938,7 @@ def gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=70
 
 
 # Define o caminho para o arquivo do DataFrame do IBGE de 2016 na pasta 'raw_data'
-caminho_df_ibge = 'IC/Datas/Pre-processed/dataset_transform_IBGE.xlsx'
+caminho_df_ibge = '/media/work/romulorocha/IC/Datas/Pre-processed/dataset_transform_IBGE.xlsx'
 
 # Carregando o dataset IBGE de ligações entre cidades com pesos
 df_ibge = pl.read_excel(caminho_df_ibge)
@@ -953,7 +953,7 @@ edges, weights, nome_municipios, codigo_para_indice, indice_para_codigo = (
 
 
 # Chamando a função para gerar a rede aleatorizada
-dataframes_stc_list, dataframes_acc_list,matrix_covid_dates,Cumulative_Cases_Day=gerar_rede_aleatorizada(edges, weights, indice_para_codigo, 2)
+dataframes_stc_list, dataframes_acc_list,matrix_covid_dates,Cumulative_Cases_Day=gerar_rede_aleatorizada(edges, weights, indice_para_codigo, 700)
 
 # Calcular a média de casos aleatorios
 concatenated_df = pd.concat(dataframes_stc_list, axis=0)
@@ -962,14 +962,22 @@ mean_df_stc = concatenated_df.groupby(concatenated_df.index).mean()
 concatenated_df = pd.concat(dataframes_acc_list, axis=0)
 mean_df_acc = concatenated_df.groupby(concatenated_df.index).mean()
 
-list_cases_name = "Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
+list_cases_name = "/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
 min_cases = [5]
 leng = len(mean_df_stc)
 
-list_cases_name = "Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
+list_cases_name = "/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
 min_cases = [5]
 leng = len(mean_df_stc)
 step = 255
-graph_plot_DateXMetrics(step,min_cases[0],leng,mean_df_stc,matrix_covid_dates)
 
-plot_acc_normalized(mean_df_acc,leng,Cumulative_Cases_Day)
+file_path_stc = '/media/work/romulorocha/IC/mean_df_stc.csv'
+file_path_acc = '/media/work/romulorocha/IC/mean_df_acc.csv'
+
+# Salvar mean_df_stc em um arquivo CSV
+mean_df_stc.to_csv(file_path_stc, index=False)
+print(f'mean_df_stc salvo no arquivo {file_path_stc}')
+
+# Salvar mean_df_acc em um arquivo CS
+mean_df_acc.to_csv(file_path_acc, index=False)
+print(f'mean_df_acc salvo no arquivo {file_path_acc}')
