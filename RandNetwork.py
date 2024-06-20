@@ -963,7 +963,7 @@ edges, weights, nome_municipios, codigo_para_indice, indice_para_codigo = (
 
 
 # Chamando a função para gerar a rede aleatorizada
-dataframes_stc_list, dataframes_acc_list, matrix_covid_dates_list, cumulative_cases_day_list = gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=700, max_threads=10)
+dataframes_stc_list, dataframes_acc_list, matrix_covid_dates_list, cumulative_cases_day_list = gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=700, max_workers=10)
 
 # Calcular a média de casos aleatorios
 concatenated_df = pd.concat(dataframes_stc_list, axis=0)
