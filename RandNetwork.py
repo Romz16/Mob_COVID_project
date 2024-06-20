@@ -823,6 +823,7 @@ import os
 import numpy as np
 import polars as pl
 import networkx as nx
+import concurrent.futures
 
 
 
@@ -871,7 +872,7 @@ def construindo_rede_mobilidade(df_ibge, codigos_municipios):
     return edges, weights, nome_municipios, codigo_para_indice, indice_para_codigo
 
 
-def gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=700):
+def rede_aleatoria_processo_paralelismo(iteracao, edges, weights, indice_para_codigo):
     # Extrair e armazenar o vetor de graus da rede original
     grafo_original = nx.Graph()
     grafo_original.add_edges_from(edges)
@@ -883,58 +884,67 @@ def gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=70
     # Lista de pares nome/geocódigo
     pares_nome_geocodigo = list(indice_para_codigo.items())
 
+    # Embaralhar o vetor de graus
+    graus_embaralhados = np.random.permutation(graus_originais)
+
+    # Gerar a rede aleatorizada via Configuration Model
+    rede_aleatorizada = nx.configuration_model(graus_embaralhados)
+    rede_aleatorizada = nx.Graph(rede_aleatorizada)  # Remove self-loops e parallel edges
+
+    # Atribuir pesos aleatórios a partir da lista de pesos originais
+    pesos_aleatorios = np.random.choice(pesos_originais, size=rede_aleatorizada.number_of_edges())
+
+    # Atribuir nomes/geocodes aos nós aleatoriamente
+    np.random.shuffle(pares_nome_geocodigo)
+    nome_geocode_dict = {id: geocode for id, geocode in pares_nome_geocodigo}
+
+    # Atribuir os nomes e pesos aos nós e arestas
+    mapping = {node: nome_geocode_dict[node] for node in rede_aleatorizada.nodes()}
+    rede_aleatorizada = nx.relabel_nodes(rede_aleatorizada, mapping)
+
+    # Adicionar atributo geocode aos nós
+    for i, node in enumerate(rede_aleatorizada.nodes()):
+        rede_aleatorizada.nodes[node]['geocode'] = nome_geocode_dict[i]
+
+    # Atribuir pesos às arestas
+    for j, (u, v) in enumerate(rede_aleatorizada.edges()):
+        rede_aleatorizada.edges[u, v]['weight'] = pesos_aleatorios[j]
+
+    # Salvar a rede aleatorizada em um arquivo GraphML
+    graph_name = f'/media/work/romulorocha/IC/Datas/networks/rede_aleatorizada_{iteracao+1}.graphml'
+    nx.write_graphml(rede_aleatorizada, graph_name)
+
+    # Aqui você pode adicionar o código para rodar os Algoritmos 1 e 2 e coletar os resultados
+    list_cases_name = "/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
+    min_cases = [5]
+    df_acc, Cumulative_Cases_Day = Acummulate(graph_name, list_cases_name, min_cases)
+    df, matrix_covid_dates = SetComparison(graph_name, list_cases_name, min_cases)
+
+    print(f"Iteração {iteracao + 1} completa.")
+    
+    return df, df_acc, matrix_covid_dates, Cumulative_Cases_Day
+
+def gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=2, max_workers=None):
     # Armazenar os DataFrames em listas para posterior análise
     dataframes_stc_list = []
     dataframes_acc_list = []
-    matrix_covid_dates = []
-    Cumulative_Cases_Day = []
+    matrix_covid_dates_list = []
+    cumulative_cases_day_list = []
 
-    for iteracao in range(num_iteracoes):
-        # Embaralhar o vetor de graus
-        graus_embaralhados = np.random.permutation(graus_originais)
+    # Usar ThreadPoolExecutor para paralelizar as iterações
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(rede_aleatoria_processo_paralelismo, iteracao, edges, weights, indice_para_codigo) for iteracao in range(num_iteracoes)]
+        
+        for future in concurrent.futures.as_completed(futures):
+            df, df_acc, matrix_covid_dates, cumulative_cases_day = future.result()
+            dataframes_stc_list.append(df)
+            dataframes_acc_list.append(df_acc)
+            matrix_covid_dates_list.append(matrix_covid_dates)
+            cumulative_cases_day_list.append(cumulative_cases_day)
 
-        # Gerar a rede aleatorizada via Configuration Model
-        rede_aleatorizada = nx.configuration_model(graus_embaralhados)
-        rede_aleatorizada = nx.Graph(rede_aleatorizada)  # Remove self-loops e parallel edges
-
-        # Atribuir pesos aleatórios a partir da lista de pesos originais
-        pesos_aleatorios = np.random.choice(pesos_originais, size=rede_aleatorizada.number_of_edges())
-
-       # Atribuir nomes/geocodes aos nós aleatoriamente
-        np.random.shuffle(pares_nome_geocodigo)
-        nome_geocode_dict = {id: geocode for id, geocode in pares_nome_geocodigo}
-
-        # Atribuir os nomes e pesos aos nós e arestas
-        mapping = {node: nome_geocode_dict[node] for node in rede_aleatorizada.nodes()}
-        rede_aleatorizada = nx.relabel_nodes(rede_aleatorizada,mapping)
-
-        # Adicionar atributo geocode aos nós
-        for i, node in enumerate(rede_aleatorizada.nodes()):
-            rede_aleatorizada.nodes[node]['geocode'] = nome_geocode_dict[i]
-
-        # Atribuir pesos às arestas
-        for j, (u, v) in enumerate(rede_aleatorizada.edges()):
-            rede_aleatorizada.edges[u, v]['weight'] = pesos_aleatorios[j]
-
-        # Salvar a rede aleatorizada em um arquivo GraphML
-        graph_name = f'/media/work/romulorocha/IC/Datas/networks/rede_aleatorizada_{iteracao+1}.graphml'
-        nx.write_graphml(rede_aleatorizada, graph_name)
-
-        # Aqui você pode adicionar o código para rodar os Algoritmos 1 e 2 e coletar os resultados
-        list_cases_name = "/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
-        min_cases = [5]
-        df_acc, Cumulative_Cases_Day = Acummulate(graph_name, list_cases_name, min_cases)
-        df, matrix_covid_dates = SetComparison(graph_name, list_cases_name, min_cases)
-
-        # Adiciona o DataFrame à lista
-        dataframes_stc_list.append(df)
-        dataframes_acc_list.append(df_acc)
-
-
-        print(f"Iteração {iteracao + 1} completa.")
     print(dataframes_acc_list)
     # Retorne os resultados desejados
-    return dataframes_stc_list, dataframes_acc_list, matrix_covid_dates, Cumulative_Cases_Day
+    return dataframes_stc_list, dataframes_acc_list, matrix_covid_dates_list, cumulative_cases_day_list
 
 
 # Define o caminho para o arquivo do DataFrame do IBGE de 2016 na pasta 'raw_data'
@@ -953,7 +963,7 @@ edges, weights, nome_municipios, codigo_para_indice, indice_para_codigo = (
 
 
 # Chamando a função para gerar a rede aleatorizada
-dataframes_stc_list, dataframes_acc_list,matrix_covid_dates,Cumulative_Cases_Day=gerar_rede_aleatorizada(edges, weights, indice_para_codigo, 700)
+dataframes_stc_list, dataframes_acc_list, matrix_covid_dates_list, cumulative_cases_day_list = gerar_rede_aleatorizada(edges, weights, indice_para_codigo, num_iteracoes=700, max_threads=10)
 
 # Calcular a média de casos aleatorios
 concatenated_df = pd.concat(dataframes_stc_list, axis=0)
@@ -961,10 +971,6 @@ mean_df_stc = concatenated_df.groupby(concatenated_df.index).mean()
 
 concatenated_df = pd.concat(dataframes_acc_list, axis=0)
 mean_df_acc = concatenated_df.groupby(concatenated_df.index).mean()
-
-list_cases_name = "/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
-min_cases = [5]
-leng = len(mean_df_stc)
 
 list_cases_name = "/media/work/romulorocha/IC/Datas/Pre-processed/cases-brazil-cities-time_2020.csv"
 min_cases = [5]
@@ -981,3 +987,16 @@ print(f'mean_df_stc salvo no arquivo {file_path_stc}')
 # Salvar mean_df_acc em um arquivo CS
 mean_df_acc.to_csv(file_path_acc, index=False)
 print(f'mean_df_acc salvo no arquivo {file_path_acc}')
+
+# Salvar matrix_covid_dates_list em um arquivo CSV
+file_path_matrix_covid_dates = '/media/work/romulorocha/IC/matrix_covid_dates_list.csv'
+concatenated_matrix_covid_dates = pd.concat(matrix_covid_dates_list, axis=0)
+concatenated_matrix_covid_dates.to_csv(file_path_matrix_covid_dates, index=False)
+print(f'matrix_covid_dates_list salvo no arquivo {file_path_matrix_covid_dates}')
+
+# Salvar cumulative_cases_day_list em um arquivo CSV
+file_path_cumulative_cases_day = '/media/work/romulorocha/IC/cumulative_cases_day_list.csv'
+concatenated_cumulative_cases_day = pd.concat(cumulative_cases_day_list, axis=0)
+concatenated_cumulative_cases_day.to_csv(file_path_cumulative_cases_day, index=False)
+print(f'cumulative_cases_day_list salvo no arquivo {file_path_cumulative_cases_day}')
+
